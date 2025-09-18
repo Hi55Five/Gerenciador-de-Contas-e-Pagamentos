@@ -2,355 +2,190 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Gerenciador de Contas e Pagamentos</title>
+  <title>Gestor de Contas e Pagamentos</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f2f4f8;
+      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 20px;
+      background: #f4f6f9;
+      color: #333;
     }
-    header {
-      background: #4f46e5;
-      color: white;
-      padding: 1rem;
+    h1 {
       text-align: center;
-      font-size: 1.5rem;
-      font-weight: bold;
+      margin-bottom: 20px;
     }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      padding: 1rem;
-    }
-    .actions {
+    .search-bar {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      margin-bottom: 1rem;
+      justify-content: center;
+      margin-bottom: 20px;
     }
-    .actions input, .actions button {
-      margin: 0.25rem;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-    }
-    .actions input {
-      flex: 1;
+    .search-bar input {
+      width: 50%;
+      padding: 10px;
+      font-size: 16px;
       border: 1px solid #ccc;
-    }
-    .actions button {
-      background: #4f46e5;
-      color: white;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .actions button:hover {
-      background: #3730a3;
+      border-radius: 8px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     th, td {
-      padding: 0.75rem;
+      padding: 12px;
       text-align: left;
       border-bottom: 1px solid #eee;
     }
     th {
-      background: #f9fafb;
-    }
-    .tag {
-      background: #e0e7ff;
-      color: #3730a3;
-      padding: 2px 6px;
-      border-radius: 6px;
-      margin-right: 4px;
-      display: inline-block;
-      font-size: 0.8rem;
-    }
-    .btn-small {
-      padding: 0.3rem 0.6rem;
-      border-radius: 6px;
-      border: none;
-      margin: 2px;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-    .copy { background: #3b82f6; color: white; }
-    .copyEmail { background: #0ea5e9; color: white; }
-    .edit { background: #facc15; color: black; }
-    .delete { background: #ef4444; color: white; }
-    .paid { background: #22c55e; color: white; }
-    .status-pendente { color: #dc2626; font-weight: bold; }
-    .status-pago { color: #16a34a; font-weight: bold; }
-    .vencido { background: #fee2e2 !important; }
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background: white;
-      padding: 1rem;
-      border-radius: 10px;
-      width: 95%;
-      max-width: 400px;
-    }
-    .modal-content input, .modal-content textarea {
-      width: 100%;
-      padding: 0.5rem;
-      margin: 0.25rem 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    .modal-content button {
-      margin-top: 0.5rem;
-      width: 100%;
-      padding: 0.5rem;
-      border: none;
-      border-radius: 6px;
-      background: #4f46e5;
+      background: #007bff;
       color: white;
     }
-    /* Resumo */
-    .resumo {
-      margin: 1rem 0;
-      background: #e0f2fe;
-      padding: 1rem;
-      border-radius: 10px;
-      text-align: center;
+    tr:hover {
+      background: #f1f1f1;
+    }
+    .tag {
+      display: inline-block;
+      background: #e0e0e0;
+      color: #333;
+      padding: 4px 8px;
+      margin: 2px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .tag:hover {
+      background: #007bff;
+      color: white;
+    }
+    .status-pago {
+      color: green;
       font-weight: bold;
     }
-    /* Responsivo */
-    @media (max-width: 768px) {
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-      thead { display: none; }
-      tr { margin-bottom: 1rem; background: white; padding: 0.5rem; border-radius: 8px; }
-      td {
-        border: none;
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-      }
-      td::before {
-        content: attr(data-label);
-        font-weight: bold;
-      }
+    .status-pendente {
+      color: red;
+      font-weight: bold;
     }
+    .btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: 0.3s;
+    }
+    .btn-copy { background: #007bff; color: white; }
+    .btn-copy:hover { background: #0056b3; }
+    .btn-status { background: #ff9800; color: white; }
+    .btn-status:hover { background: #e68900; }
   </style>
 </head>
 <body>
-<header>Gerenciador de Contas e Pagamentos</header>
-<div class="container">
-  <div class="actions">
-    <input type="text" id="q" placeholder="Pesquisar...">
-    <button onclick="openModal()">+ Adicionar</button>
-    <button onclick="exportJSON()">Exportar JSON</button>
-    <button onclick="importJSON()">Importar JSON</button>
-    <button onclick="exportCSV()">Exportar CSV</button>
-    <button onclick="importCSV()">Importar CSV</button>
-  </div>
 
-  <div class="resumo" id="resumo">Resumo: R$0 pagos / R$0 pendentes</div>
+<h1>Gestor de Contas e Pagamentos</h1>
 
-  <table id="tabela">
-    <thead>
-      <tr>
-        <th>Título</th>
-        <th>Email</th>
-        <th>Tags</th>
-        <th>Valor</th>
-        <th>Vencimento</th>
-        <th>Status</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div class="search-bar">
+  <input type="text" id="search" placeholder="Pesquisar por título, email, notas ou tags...">
 </div>
 
-<!-- Modal -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <h3 id="modal-title">Adicionar Conta</h3>
-    <input type="hidden" id="acc-id">
-    <input type="text" id="title" placeholder="Título">
-    <input type="text" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Senha">
-    <input type="text" id="tags" placeholder="Tags (separadas por vírgula)">
-    <input type="number" id="valor" placeholder="Valor (R$)" step="0.01">
-    <input type="date" id="vencimento">
-    <textarea id="notes" placeholder="Notas"></textarea>
-    <button onclick="saveAccount()">Salvar</button>
-    <button onclick="closeModal()" style="background:#9ca3af">Cancelar</button>
-  </div>
-</div>
+<table id="accountTable">
+  <thead>
+    <tr>
+      <th>Título</th>
+      <th>Email</th>
+      <th>Senha</th>
+      <th>Tags</th>
+      <th>Vencimento</th>
+      <th>Valor</th>
+      <th>Status</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
 <script>
-let accounts = [];
+  let accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
 
-function uid(){ return Date.now()+Math.random(); }
-function saveAll(){ localStorage.setItem("accounts", JSON.stringify(accounts)); }
-function loadAll(){ accounts = JSON.parse(localStorage.getItem("accounts")||"[]"); }
-
-function render(q=""){
-  const tbody=document.querySelector("#tabela tbody");
-  tbody.innerHTML="";
-  let totalPago=0, totalPendente=0;
-  const hoje = new Date().toISOString().split("T")[0];
-  accounts.filter(a=>
-    a.title.toLowerCase().includes(q.toLowerCase()) || 
-    a.email.toLowerCase().includes(q.toLowerCase())
-  ).forEach(acc=>{
-    const tr=document.createElement("tr");
-    if(acc.status==="Pendente" && acc.vencimento && acc.vencimento<hoje){
-      tr.classList.add("vencido");
-    }
-    tr.innerHTML=`
-      <td data-label="Título">${acc.title}</td>
-      <td data-label="Email">${acc.email}</td>
-      <td data-label="Tags">${acc.tags.split(",").map(t=>`<span class='tag'>${t.trim()}</span>`).join("")}</td>
-      <td data-label="Valor">R$${Number(acc.valor||0).toFixed(2)}</td>
-      <td data-label="Vencimento">${acc.vencimento||""}</td>
-      <td data-label="Status"><span class="${acc.status==="Pago"?"status-pago":"status-pendente"}">${acc.status}</span></td>
-      <td data-label="Ações">
-        <button class="btn-small copyEmail" onclick="copyToClipboard('${acc.email}')">📧</button>
-        <button class="btn-small copy" onclick="copyToClipboard('${acc.password}')">🔑</button>
-        <button class="btn-small edit" onclick="openModal(${acc.id})">✏️</button>
-        <button class="btn-small delete" onclick="delAccount(${acc.id})">🗑️</button>
-        <button class="btn-small paid" onclick="markPaid(${acc.id})">💵</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-    if(acc.status==="Pago") totalPago+=Number(acc.valor||0);
-    else totalPendente+=Number(acc.valor||0);
-  });
-  document.getElementById("resumo").innerText=`Resumo: R$${totalPago.toFixed(2)} pagos / R$${totalPendente.toFixed(2)} pendentes`;
-}
-
-function copyToClipboard(text){
-  navigator.clipboard.writeText(text);
-}
-
-function openModal(id=null){
-  document.getElementById("modal").style.display="flex";
-  if(id){
-    const acc=accounts.find(a=>a.id===id);
-    document.getElementById("modal-title").innerText="Editar Conta";
-    document.getElementById("acc-id").value=acc.id;
-    document.getElementById("title").value=acc.title;
-    document.getElementById("email").value=acc.email;
-    document.getElementById("password").value=acc.password;
-    document.getElementById("tags").value=acc.tags;
-    document.getElementById("valor").value=acc.valor;
-    document.getElementById("vencimento").value=acc.vencimento;
-    document.getElementById("notes").value=acc.notes;
-  } else {
-    document.getElementById("modal-title").innerText="Adicionar Conta";
-    document.getElementById("acc-id").value="";
-    document.querySelectorAll("#modal input, #modal textarea").forEach(e=>e.value="");
+  // Exemplo inicial
+  if(accounts.length === 0){
+    accounts = [
+      {id:1, title:"Conta Google", email:"teste@gmail.com", password:"1234", tags:"Google,Trabalho", vencimento:"2025-09-30", valor:5.00, status:"Pago"},
+      {id:2, title:"Conta Netflix", email:"user@netflix.com", password:"senha123", tags:"Streaming", vencimento:"2025-09-20", valor:20.00, status:"Pendente"}
+    ];
+    localStorage.setItem("accounts", JSON.stringify(accounts));
   }
-}
-function closeModal(){ document.getElementById("modal").style.display="none"; }
 
-function saveAccount(){
-  const id=document.getElementById("acc-id").value;
-  const data={
-    id: id?Number(id):uid(),
-    title: document.getElementById("title").value,
-    email: document.getElementById("email").value,
-    password: document.getElementById("password").value,
-    tags: document.getElementById("tags").value,
-    valor: document.getElementById("valor").value,
-    vencimento: document.getElementById("vencimento").value,
-    notes: document.getElementById("notes").value,
-    status: id?accounts.find(a=>a.id==id).status:"Pendente"
-  };
-  if(id){
-    const i=accounts.findIndex(a=>a.id==id);
-    accounts[i]=data;
-  } else {
-    accounts.push(data);
+  function saveAll(){
+    localStorage.setItem("accounts", JSON.stringify(accounts));
   }
-  saveAll(); closeModal(); render(document.getElementById("q").value);
-}
-function delAccount(id){ accounts=accounts.filter(a=>a.id!==id); saveAll(); render(document.getElementById("q").value); }
-function markPaid(id){
-  const acc=accounts.find(a=>a.id===id);
-  if(acc){ acc.status="Pago"; saveAll(); render(document.getElementById("q").value); }
-}
 
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(accounts)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="accounts.json"; a.click();
-}
-function importJSON(){
-  const fi=document.createElement("input"); fi.type="file"; fi.accept=".json";
-  fi.onchange=e=>{
-    const fr=new FileReader();
-    fr.onload=()=>{ accounts=JSON.parse(fr.result); saveAll(); render(); };
-    fr.readAsText(fi.files[0]);
-  };
-  fi.click();
-}
+  function render(filter=""){
+    const tbody = document.querySelector("#accountTable tbody");
+    tbody.innerHTML = "";
+    filter = filter.toLowerCase();
 
-// Exportar CSV
-function exportCSV(){
-  const header = ["title","email","password","tags","valor","vencimento","status","notes"];
-  const rows = accounts.map(acc=>header.map(h=>`"${(acc[h]||"").toString().replace(/"/g,'""')}"`).join(","));
-  const csv = header.join(",") + "\n" + rows.join("\n");
-  const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="accounts.csv"; a.click();
-}
+    accounts.forEach(acc=>{
+      if(
+        acc.title.toLowerCase().includes(filter) ||
+        acc.email.toLowerCase().includes(filter) ||
+        acc.tags.toLowerCase().includes(filter) ||
+        acc.notes?.toLowerCase().includes(filter)
+      ){
+        const tr = document.createElement("tr");
 
-// Importar CSV
-function importCSV(){
-  const fi=document.createElement("input"); fi.type="file"; fi.accept=".csv";
-  fi.onchange=e=>{
-    const fr=new FileReader();
-    fr.onload=()=>{
-      const lines=fr.result.split("\n").filter(l=>l.trim()!=="");
-      const header=lines[0].split(",").map(h=>h.trim().replace(/"/g,""));
-      accounts=[];
-      for(let i=1;i<lines.length;i++){
-        const cols=lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)||[];
-        const obj={};
-        header.forEach((h,idx)=>{ obj[h]=cols[idx]?cols[idx].replace(/^"|"$/g,""):""; });
-        accounts.push({
-          id: uid(),
-          title: obj.title||"",
-          email: obj.email||"",
-          password: obj.password||"",
-          tags: obj.tags||"",
-          valor: obj.valor||"",
-          vencimento: obj.vencimento||"",
-          status: obj.status||"Pendente",
-          notes: obj.notes||""
+        // Tags formatadas
+        let tagsHTML = "";
+        acc.tags.split(",").forEach(tag=>{
+          const t = tag.trim();
+          if(t){
+            tagsHTML += `<span class="tag" onclick="filterByTag('${t}')">${t}</span>`;
+          }
         });
+
+        tr.innerHTML = `
+          <td>${acc.title}</td>
+          <td>${acc.email} <button class="btn btn-copy" onclick="copyText('${acc.email}')">Copiar</button></td>
+          <td>****** <button class="btn btn-copy" onclick="copyText('${acc.password}')">Copiar</button></td>
+          <td>${tagsHTML}</td>
+          <td>${acc.vencimento}</td>
+          <td>R$ ${acc.valor.toFixed(2)}</td>
+          <td class="${acc.status === 'Pago' ? 'status-pago' : 'status-pendente'}">${acc.status}</td>
+          <td><button class="btn btn-status" onclick="toggleStatus(${acc.id})">${acc.status === 'Pago' ? 'Não Pagou' : 'Pago'}</button></td>
+        `;
+        tbody.appendChild(tr);
       }
-      saveAll(); render();
-    };
-    fr.readAsText(fi.files[0]);
-  };
-  fi.click();
-}
+    });
+  }
 
-document.getElementById("q").addEventListener("input", e=>render(e.target.value));
+  function copyText(text){
+    navigator.clipboard.writeText(text).catch(err=>console.error("Erro ao copiar:", err));
+  }
 
-loadAll(); render();
+  function toggleStatus(id){
+    const acc = accounts.find(a=>a.id === id);
+    if(acc){
+      acc.status = acc.status === "Pago" ? "Pendente" : "Pago";
+      saveAll();
+      render(document.getElementById("search").value);
+    }
+  }
+
+  function filterByTag(tag){
+    document.getElementById("search").value = tag;
+    render(tag);
+  }
+
+  document.getElementById("search").addEventListener("input", e=>{
+    render(e.target.value);
+  });
+
+  render();
 </script>
+
 </body>
 </html>
