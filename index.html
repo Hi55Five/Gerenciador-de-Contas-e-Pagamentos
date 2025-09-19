@@ -56,7 +56,7 @@ th { background:#f7f7f7; color:#333; font-weight:600; }
     <input id="q" type="text" placeholder="Pesquisar por título, email, tags ou notas...">
     <button id="btnAdd" class="add">➕ Nova conta</button>
     <button id="btnExportCSV" class="export">Exportar CSV</button>
-    <button id="btnImportCSV" class="import">Importar CSV</button>
+    <button id="btnImportCSV" class="import">Importar CSV/JSON</button>
     <button id="btnExportJSON" class="export">Backup JSON</button>
     <input id="fileInput" type="file" accept=".csv,.json" style="display:none;">
   </div>
@@ -140,14 +140,14 @@ function render(filter=""){
 
 function attachButtons(){
   document.querySelectorAll(".copy").forEach(b=>b.onclick=async()=>{
-    const id=Number(b.dataset.id); 
-    const acc=accounts.find(x=>x.id===id); 
+    const id=Number(b.dataset.id);
+    const acc=accounts.find(x=>x.id===id);
     if(!acc) return;
     try { await navigator.clipboard.writeText(acc.password||""); } catch(e){ }
   });
   document.querySelectorAll(".copyEmail").forEach(b=>b.onclick=async()=>{
-    const id=Number(b.dataset.id); 
-    const acc=accounts.find(x=>x.id===id); 
+    const id=Number(b.dataset.id);
+    const acc=accounts.find(x=>x.id===id);
     if(!acc) return;
     try { await navigator.clipboard.writeText(acc.email||""); } catch(e){ }
   });
@@ -177,31 +177,93 @@ function escapeHtml(s){ return (s||"").replaceAll("&","&amp;").replaceAll("<","&
 
 document.getElementById("btnAdd").onclick=openModalForNew;
 document.getElementById("modalCancel").onclick=()=>showModal(false);
-document.getElementById("modalSave").onclick=()=>{
-  const title=document.getElementById("fieldTitle").value.trim();
-  const email=document.getElementById("fieldEmail").value.trim();
-  const password=document.getElementById("fieldPassword").value;
-  const tags=document.getElementById("fieldTags").value.trim();
-  const notes=document.getElementById("fieldNotes").value.trim();
-  if(!title && !email) return;
-  if(editingId==null){ accounts.push({id:uid(), title,email,password,tags,notes,created:Date.now()}); }
-  else{ const a=accounts.find(x=>x.id===editingId); if(!a)return; a.title=title; a.email=email; a.password=password; a.tags=tags; a.notes=notes; }
-  saveAll(); showModal(false); render(document.getElementById("q").value);
+
+// Salvar ou atualizar conta
+document.getElementById("modalSave").onclick = () => {
+  const title = document.getElementById("fieldTitle").value.trim();
+  const email = document.getElementById("fieldEmail").value.trim();
+  const password = document.getElementById("fieldPassword").value;
+  const tags = document.getElementById("fieldTags").value.trim();
+  const notes = document.getElementById("fieldNotes").value.trim();
+
+  if (!title && !email) return;
+
+  const existing = accounts.find(acc => acc.email === email);
+
+  if (existing && editingId == null) {
+    existing.title = title;
+    existing.password = password;
+    existing.tags = tags;
+    existing.notes = notes;
+  } else if (editingId == null) {
+    accounts.push({ id: uid(), title, email, password, tags, notes, created: Date.now() });
+  } else {
+    const a = accounts.find(x => x.id === editingId);
+    if (!a) return;
+    a.title = title;
+    a.email = email;
+    a.password = password;
+    a.tags = tags;
+    a.notes = notes;
+  }
+
+  saveAll();
+  showModal(false);
+  render(document.getElementById("q").value);
 };
 
 document.getElementById("q").addEventListener("input", e=>render(e.target.value));
 
+// Exportação
 function accountsToCSV(arr){ const rows=[["title","email","password","tags","notes"]]; for(const a of arr)rows.push([a.title||"",a.email||"",a.password||"",a.tags||"",a.notes||""]); return rows.map(r=> r.map(c=>`"${String(c||"").replaceAll('"','""')}"`).join(",")).join("\n"); }
 function download(filename,text){ const blob=new Blob([text],{type:"text/plain;charset=utf-8"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
 
 document.getElementById("btnExportCSV").onclick=()=>download("passman_export.csv",accountsToCSV(accounts));
 document.getElementById("btnExportJSON").onclick=()=>download("passman_export.json",JSON.stringify(accounts,null,2));
 
-document.getElementById("btnImportCSV").onclick=()=>{
-  const fi=document.getElementById("fileInput"); fi.accept=".csv,.json"; fi.value=""; fi.onchange=async()=>{
-    const f=fi.files[0]; if(!f)return; const text=await f.text();
-    if(f.name.toLowerCase().endsWith(".json")){ try{ const j=JSON.parse(text); if(Array.isArray(j)){ for(const it of j){ if(!it.id) it.id=uid(); accounts.push(it); } saveAll(); render(document.getElementById("q").value); } } catch(e){ } }
-    else{ const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); if(lines.length<2)return; const header=parseCSVLine(lines[0]).map(h=>h.toLowerCase()); for(let i=1;i<lines.length;i++){ const row=parseCSVLine(lines[i]); const obj={}; for(let c=0;c<header.length;c++)obj[header[c]]=row[c]||""; accounts.push({id:uid(), title:obj.title||"", email:obj.email||"", password:obj.password||"", tags:obj.tags||"", notes:obj.notes||""}); } saveAll(); render(document.getElementById("q").value); } fi.value=""; };
+// Importação CSV/JSON
+document.getElementById("btnImportCSV").onclick = () => {
+  const fi = document.getElementById("fileInput");
+  fi.accept = ".csv,.json";
+  fi.value = "";
+  fi.onchange = async () => {
+    const f = fi.files[0];
+    if (!f) return;
+    const text = await f.text();
+
+    const processAccount = (obj) => {
+      const existing = accounts.find(acc => acc.email === obj.email);
+      if (existing) {
+        existing.title = obj.title || existing.title;
+        existing.password = obj.password || existing.password;
+        existing.tags = obj.tags || existing.tags;
+        existing.notes = obj.notes || existing.notes;
+      } else {
+        accounts.push({ id: uid(), title: obj.title || "", email: obj.email || "", password: obj.password || "", tags: obj.tags || "", notes: obj.notes || "" });
+      }
+    }
+
+    if (f.name.toLowerCase().endsWith(".json")) {
+      try {
+        const j = JSON.parse(text);
+        if (Array.isArray(j)) j.forEach(it => processAccount(it));
+      } catch (e) { alert("Erro ao importar JSON"); }
+    } else {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) return;
+      const header = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+      for (let i = 1; i < lines.length; i++) {
+        const row = parseCSVLine(lines[i]);
+        const obj = {};
+        for (let c = 0; c < header.length; c++) obj[header[c]] = row[c] || "";
+        processAccount(obj);
+      }
+    }
+
+    saveAll();
+    render(document.getElementById("q").value);
+    fi.value = "";
+  };
   fi.click();
 };
 
